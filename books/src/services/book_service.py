@@ -46,3 +46,12 @@ class BookService:
             print("Erro: A fila 'livros-fila' não foi encontrada. Certifique-se de que a fila existe.")
         except HttpResponseError as e:
             print(f"Erro ao processar mensagem da fila: {e}")
+
+    def get_book(self, isbn: str) -> BookDTO:
+        return self.book_repository.get_book_by_isbn(isbn)
+
+    def query_books(self, filter_expression: str):
+        return self.book_repository.query_books(filter_expression)
+
+    def delete_book(self, isbn: str):
+        self.book_repository.delete_book_by_isbn(isbn)

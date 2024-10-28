@@ -2,6 +2,7 @@ from books.src.config.azure_config import AzureConfig
 from azure.data.tables import TableServiceClient, TableClient, UpdateMode
 from books.src.dto.book_dto import BookDTO
 import json
+from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 
 
 class BookRepository:
@@ -17,4 +18,32 @@ class BookRepository:
         }
         insert_entity = self.table_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
         print(f"Inserted entity: {insert_entity}")
+    def get_book_by_isbn(self, isbn: str) -> BookDTO:
+        try:
+            entity = self.table_client.get_entity(partition_key='Book', row_key=isbn)
+            book_data = json.loads(entity['BookData'])
+            return BookDTO(**book_data)
+        except ResourceNotFoundError:
+            print(f"Livro com ISBN {isbn} não encontrado.")
+            return None
+        except Exception as e:
+            print(f"Erro ao buscar o livro: {e}")
+            return None
 
+    def query_books(self, filter_expression: str):
+        try:
+            entities = self.table_client.query_entities(filter=filter_expression)
+            books = [BookDTO(**json.loads(entity['BookData'])) for entity in entities]
+            return books
+        except Exception as e:
+            print(f"Erro ao realizar a consulta: {e}")
+            return []
+
+    def delete_book_by_isbn(self, isbn: str):
+        try:
+            self.table_client.delete_entity(partition_key='Book', row_key=isbn)
+            print(f"Livro com ISBN {isbn} deletado com sucesso.")
+        except ResourceNotFoundError:
+            print(f"Livro com ISBN {isbn} não encontrado para deletar.")
+        except Exception as e:
+            print(f"Erro ao deletar o livro: {e}")
