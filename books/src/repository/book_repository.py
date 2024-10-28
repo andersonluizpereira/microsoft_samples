@@ -47,3 +47,15 @@ class BookRepository:
             print(f"Livro com ISBN {isbn} não encontrado para deletar.")
         except Exception as e:
             print(f"Erro ao deletar o livro: {e}")
+    def get_all_books(self):
+        try:
+            entities = self.table_client.list_entities()
+            books = [BookDTO(**json.loads(entity['BookData'])) for entity in entities]
+            return books
+        except Exception as e:
+            print(f"Erro ao buscar todos os livros: {e}")
+            return []
+
+    def update_book(self, book_dto: BookDTO):
+        # O método save_book já faz a atualização, pois usa upsert_entity
+        self.save_book(book_dto)

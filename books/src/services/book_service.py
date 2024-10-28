@@ -55,3 +55,9 @@ class BookService:
 
     def delete_book(self, isbn: str):
         self.book_repository.delete_book_by_isbn(isbn)
+    def get_all_books(self):
+        return self.book_repository.get_all_books()
+    def add_book(self, book_dto: BookDTO):
+        self.book_repository.save_book(book_dto)
+    def update_book(self, book_dto: BookDTO):
+        self.book_repository.update_book(book_dto)
