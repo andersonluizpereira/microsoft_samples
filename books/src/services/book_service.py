@@ -5,9 +5,10 @@ from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from books.src.config.azure_config import AzureConfig
 from books.src.dto.book_dto import BookDTO
 from books.src.repository.book_repository import BookRepository
+from books.src.services.interfaces.book_service_interface import IBookService
 
 
-class BookService:
+class BookService(IBookService):
     def __init__(self):
         self.queue_client = AzureConfig.get_queue_service_client().get_queue_client("livros-fila")
         self.ensure_queue_exists()
