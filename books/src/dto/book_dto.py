@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class BookDTO(BaseModel):
     isbn: str
     tipo_livro: str
