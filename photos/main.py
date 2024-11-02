@@ -1,16 +1,13 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from fastapi.responses import JSONResponse, Response
+from azure.storage.blob import BlobServiceClient, ContainerClient, BlobClient
 import os
 
 app = FastAPI()
 
 # Configurações do Azurite
 AZURITE_CONNECTION_STRING = (
-    "DefaultEndpointsProtocol=http;"
-    "AccountName=devstoreaccount1;"
-    "AccountKey=Eby8vdM02xNOcqFeqC9eK9Z3mPj4JydK3uWqvFQ==;"
-    "BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+    "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
 )
 CONTAINER_NAME = "fotos"
 
@@ -29,6 +26,7 @@ def initialize_blob_service():
         print(f"Erro ao conectar ao Azurite: {e}")
         raise e
 
+# Inicializa o BlobServiceClient
 blob_service_client = initialize_blob_service()
 
 @app.post("/upload")
@@ -59,6 +57,26 @@ async def get_photo(blob_name: str):
     try:
         blob = blob_client.download_blob()
         return JSONResponse(status_code=200, content={"blob_name": blob_name, "size": blob.size})
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Foto não encontrada.")
+
+@app.get("/download/{blob_name}")
+async def download_photo(blob_name: str):
+    """
+    Endpoint para baixar uma foto específica.
+    """
+    blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=blob_name)
+    try:
+        blob = blob_client.download_blob()
+        content = blob.readall()
+        # Detecta o tipo de conteúdo com base na extensão do arquivo
+        if blob_name.lower().endswith('.png'):
+            media_type = "image/png"
+        elif blob_name.lower().endswith('.gif'):
+            media_type = "image/gif"
+        else:
+            media_type = "image/jpeg"
+        return Response(content, media_type=media_type)
     except Exception as e:
         raise HTTPException(status_code=404, detail="Foto não encontrada.")
 
